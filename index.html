@@ -1,0 +1,66 @@
+<!-- aplikasi ngodop -->
+<style>
+    .form-nama-dan-odop input:not([type="submit"]) {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+
+    .form-nama-dan-odop input[type="submit"] {
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+
+    .iframe-ngodop {
+        width: 100%;
+        height: 500px;
+    }
+</style>
+<script src="https://unpkg.com/petite-vue"></script>
+
+<!-- anywhere on the page -->
+<div class="app" @vue:mounted="mounted">
+    <div v-if="sudahIsiForm">
+        <!-- tampilkan  google forms -->
+        <iframe class="iframe-ngodop"
+            :src="`https://docs.google.com/forms/d/e/1FAIpQLScyECrfcdOz3PSrCHIPmIOu3qi4MYEI8a827vuSGIUDlYeZmg/viewform?usp=pp_url&entry.1104975909=${encodeURIComponent(`${nama} - ODOP ${odop}`)}`"
+            frameborder="0"></iframe>
+        <!-- <a class="link-formulir-ngodop" target="_blank"
+            :href="`https://docs.google.com/forms/d/e/1FAIpQLScyECrfcdOz3PSrCHIPmIOu3qi4MYEI8a827vuSGIUDlYeZmg/viewform?usp=pp_url&entry.1104975909=${encodeURIComponent(`${nama} - ODOP ${odop}`)}`">Klik
+            disini untuk mengisi Formulir Laporan Menulis Ngodop</a> -->
+    </div>
+    <div v-else>
+        <!-- tanyakan nama dan odop -->
+        <p class="p-nama-dan-odop">Silahkan isi data ini terlebih dahulu</p>
+        <form class="form-nama-dan-odop" @submit.prevent="simpan" action="">
+            <label for="nama">Nama</label>
+            <input type="text" v-model="nama" placeholder="Ayu Safitri" id="nama">
+            <label for="odop">ODOP ke</label>
+            <input type="tel" placeholder="7" v-model="odop" id="odop">
+            <input type="submit" value="Simpan">
+        </form>
+    </div>
+</div>
+<script>
+    PetiteVue.createApp({
+        nama: "",
+        odop: "",
+        sudahIsiForm: false,
+        mounted() {
+            if (localStorage.nama) {
+                this.nama = localStorage.nama;
+            }
+            if (localStorage.odop) {
+                this.odop = localStorage.odop;
+            }
+            if (localStorage.nama && localStorage.odop) {
+                this.sudahIsiForm = true;
+            }
+        },
+        simpan() {
+            localStorage.setItem("nama", this.nama);
+            localStorage.setItem("odop", this.odop);
+            this.sudahIsiForm = true;
+        }
+    }).mount(".app")
+</script>
