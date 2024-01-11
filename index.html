@@ -1,4 +1,14 @@
-<!-- aplikasi ngodop -->
+<p><b>Haloo, ODOPers silakan setorkan tulisanmu di form ini yuk!</b></p>
+<p>Form pada halaman ini digunakan untuk setoran harian sepanjang bulan berlangsung. Diharapkan ODOPers menyetorkan link
+    tulisannya langsung ya! Yang disetorkan bukan link halaman depan blog atau profile media sosialnya.&nbsp;</p>
+<p>Akan diberikan rapor setiap setelah satu bulan berjalan untuk mengumumkan medali yang diperoleh berdasarkan jumlah
+    setoran pada bulan sebelumnya.</p>
+<p>Platform setoran yang digunakan adalah Google Dokumen, Instagram, Facebook, Blog atau platform menulis lainnya.</p>
+<p>Panjang tulisan minimal mulai dari 300 kata. Tema tulisan bebas.</p>
+<p><b>Setoran yang dihitung HANYA SATU SETORAN PER HARI</b>&nbsp;berdasarkan data Realtime yang masuk di Formulir
+    Setoran.</p>
+
+<!--aplikasi ngodop-->
 <style>
     .form-nama-dan-odop input:not([type="submit"]) {
         width: 100%;
@@ -18,26 +28,23 @@
 </style>
 <script src="https://unpkg.com/petite-vue"></script>
 
-<!-- anywhere on the page -->
-<div class="app" @vue:mounted="mounted">
+<!--anywhere on the page-->
+<div class="app" v-on:vue:mounted="mounted">
     <div v-if="sudahIsiForm">
-        <!-- tampilkan  google forms -->
-        <iframe class="iframe-ngodop"
-            :src="`https://docs.google.com/forms/d/e/1FAIpQLScyECrfcdOz3PSrCHIPmIOu3qi4MYEI8a827vuSGIUDlYeZmg/viewform?usp=pp_url&entry.1104975909=${encodeURIComponent(`${nama} - ODOP ${odop}`)}`"
-            frameborder="0"></iframe>
-        <!-- <a class="link-formulir-ngodop" target="_blank"
-            :href="`https://docs.google.com/forms/d/e/1FAIpQLScyECrfcdOz3PSrCHIPmIOu3qi4MYEI8a827vuSGIUDlYeZmg/viewform?usp=pp_url&entry.1104975909=${encodeURIComponent(`${nama} - ODOP ${odop}`)}`">Klik
-            disini untuk mengisi Formulir Laporan Menulis Ngodop</a> -->
+        <!--tampilkan  google forms-->
+        <iframe
+            v-bind:src="`https://docs.google.com/forms/d/e/1FAIpQLScyECrfcdOz3PSrCHIPmIOu3qi4MYEI8a827vuSGIUDlYeZmg/viewform?usp=pp_url&amp;entry.1104975909=${encodeURIComponent(`${nama} - ODOP ${odop}`)}`"
+            class="iframe-ngodop" frameborder="0"></iframe>
     </div>
-    <div v-else>
-        <!-- tanyakan nama dan odop -->
+    <div v-if="!sudahIsiForm">
+        <!--tanyakan nama dan odop-->
         <p class="p-nama-dan-odop">Silahkan isi data ini terlebih dahulu</p>
-        <form class="form-nama-dan-odop" @submit.prevent="simpan" action="">
-            <label for="nama">Nama</label>
-            <input type="text" v-model="nama" placeholder="Ayu Safitri" id="nama">
-            <label for="odop">ODOP ke</label>
-            <input type="tel" placeholder="7" v-model="odop" id="odop">
-            <input type="submit" value="Simpan">
+        <form class="form-nama-dan-odop" v-on:submit.prevent="simpan">
+            <label>Nama</label>
+            <input id="nama" type="text" v-model="nama" />
+            <label>ODOP ke</label>
+            <input id="odop" type="tel" v-model="odop" />
+            <input type="submit" value="Simpan" />
         </form>
     </div>
 </div>
@@ -64,3 +71,10 @@
         }
     }).mount(".app")
 </script>
+<i>
+    <div><i><br /></i></div>
+    <div><i><br /></i></div>
+    <div><i><br /></i></div>
+    <div><i><br /></i></div>*Setoran harian berbasis website ini terinspirasi dari Kelas Literasi Ibu
+    Profesional
+</i>
