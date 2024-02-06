@@ -2,6 +2,7 @@
   [v-cloak] {
     display: none;
   }
+
   .wadah-tabel {
     max-width: 100%;
     overflow: auto;
@@ -9,7 +10,10 @@
 </style>
 <!--<script src="/lib/petite-vue.iife.js"></script>-->
 <script src="https://unpkg.com/petite-vue@0.4.0/dist/petite-vue.iife.js"></script>
-<div class="app" v-cloak="" v-on:vue:mounted="dapatkan">
+<div class="app" v-cloak="" v-on:vue:mounted="buatFilter">
+  <select v-model="bulanTerpilih" v-on:change="dapatkan">
+    <option v-for="x in listBulan">{{ x }}</option>
+  </select>
   <p>Medali Emas (25 hari): {{ emas.toLocaleString('id') }}</p>
   <!--25-31-->
   <p>Medali Perak (15 hari): {{ perak.toLocaleString('id') }}</p>
@@ -31,10 +35,8 @@
   <p>Jumlah Kata: {{ jumlahKata.toLocaleString('id') }}</p>
   <p>
     Jumlah Kata per Setoran:
-    <span v-if="jumlahKata"
-      >{{ (jumlahKata / dihitung).toLocaleString('id').replace(/,.+/, '')
-      }}</span
-    >
+    <span v-if=" jumlahKata">{{ (jumlahKata / dihitung).toLocaleString('id').replace(/,.+/, '')
+      }}</span>
     <span v-else="">0</span>
   </p>
   <div class="wadah-tabel">
@@ -61,18 +63,9 @@
             x.jumlahSetoran).toLocaleString('id').replace(/,.+/, '') }}
           </td>
           <td>
-            <span
-              v-if="x.jumlahSetoran &gt;= 25 &amp;&amp; x.jumlahSetoran &lt;= 31"
-              >Emas</span
-            >
-            <span
-              v-else-if="x.jumlahSetoran &gt;= 15 &amp;&amp; x.jumlahSetoran &lt;= 24"
-              >Perak</span
-            >
-            <span
-              v-else-if="x.jumlahSetoran &gt;= 8 &amp;&amp; x.jumlahSetoran &lt;= 14"
-              >Perunggu</span
-            >
+            <span v-if="x.jumlahSetoran &gt;= 25 &amp;&amp; x.jumlahSetoran &lt;= 31">Emas</span>
+            <span v-else-if="x.jumlahSetoran &gt;= 15 &amp;&amp; x.jumlahSetoran &lt;= 24">Perak</span>
+            <span v-else-if="x.jumlahSetoran &gt;= 8 &amp;&amp; x.jumlahSetoran &lt;= 14">Perunggu</span>
           </td>
         </tr>
       </tbody>
@@ -81,6 +74,8 @@
 </div>
 <script>
   PetiteVue.createApp({
+    listBulan: [],
+    bulanTerpilih: '',
     tes: "",
     masuk: 0,
     dihitung: 0,
@@ -95,47 +90,74 @@
     ugc: 0,
     jumlahKata: 0,
     rekap: [],
-    async dapatkan() {
-      // let datanya = await fetch('/lib/data.json')
-      let datanya = await fetch(
-        "https://sheets.googleapis.com/v4/spreadsheets/18H4E2we8XWUB4d-SUSpkllunVKSyKlgeOM4-PZJaSyw/values/Form%20Responses%201?key=AIzaSyAbtHcMPVjDFVRxQyx1pVwl6BIuSEEdRZY"
-      );
+    // sumber: "../Form Responses 1.json",
+    sumber: "https://sheets.googleapis.com/v4/spreadsheets/18H4E2we8XWUB4d-SUSpkllunVKSyKlgeOM4-PZJaSyw/values/Form%20Responses%201?key=AIzaSyAbtHcMPVjDFVRxQyx1pVwl6BIuSEEdRZY",
+    async buatFilter() {
+      let datanya = await fetch(this.sumber);
       datanya = await datanya.json();
+      let nilainya = datanya.values.filter(x => x.length > 0).filter((a, n) => n != 0);
 
-      let nilainya = datanya.values.filter((a, n) => n != 0);
-      //   console.log("NILAINYA");
-      //   console.log(nilainya);
-      this.masuk = nilainya.length;
 
-      let dataRapi = [];
+      let dataSemua = [];
       for (let x of nilainya) {
         let [tanggal, nama, media, jumlahKata, link] = x;
-        dataRapi = [
-          ...dataRapi,
-          {
-            tanggal,
-            tanggalnyaAja: tanggal.replace(/\s.+/, ""),
-            bulan: tanggal
-              .replace(/\s.+/, "")
-              .split("/") /* masih bagian ini */,
-            nama,
-            media,
-            jumlahKata,
-            link,
-          },
-        ];
+        dataSemua.push({
+          tanggal,
+          nama,
+          media,
+          jumlahKata,
+          link,
+          bulan: tanggal.split(' ')[0].substring(3),
+          tanggalnyaAja: tanggal.replace(/\s.+/, ""),
+        });
       }
-      //   console.log("DATA RAPI");
-      //   console.log(dataRapi);
-      dataRapi = dataRapi.filter((x) => +x.jumlahKata >= 300);
-      //   console.log(dataRapi);
-      dataRapi = dataRapi.sort((a, b) => (a.nama > b.nama ? 1 : -1));
-      //   console.log(dataRapi);
 
-      // data filter = data final yang sudah rapi dalam format json
+
+
+      function getDistinctMonths(dataSet) {
+        const uniqueMonths = new Set();
+        dataSet.forEach(item => {
+          uniqueMonths.add(item.bulan);
+        });
+        return Array.from(uniqueMonths);
+      }
+      this.listBulan = getDistinctMonths(dataSemua);
+      this.bulanTerpilih = this.listBulan[this.listBulan.length - 1];
+      this.dapatkan();
+    },
+    async dapatkan() {
+      let datanya = await fetch(this.sumber);
+      datanya = await datanya.json();
+
+      let nilainya = datanya.values.filter(x => x.length > 0).filter((a, n) => n != 0);
+
+      let dataSemua = [];
+      for (let x of nilainya) {
+        let [tanggal, nama, media, jumlahKata, link] = x;
+        dataSemua.push({
+          tanggal,
+          nama,
+          media,
+          jumlahKata,
+          link,
+          bulan: tanggal.split(' ')[0].substring(3),
+          tanggalnyaAja: tanggal.replace(/\s.+/, ""),
+        });
+      }
+
+
+      dataRapi = dataSemua.filter(x => x.bulan == this.bulanTerpilih);
+
+      this.masuk = dataRapi.length;
+
+
+      dataRapi = dataRapi.filter((x) => +x.jumlahKata >= 300);
+      dataRapi = dataRapi.sort((a, b) => (a.nama > b.nama ? 1 : -1));
+
+
+
       let dataFilter = [];
       for (let n in dataRapi) {
-        // console.log(n);
         if (n == 0) {
           dataFilter = [...dataFilter, dataRapi[n]];
         } else {
@@ -149,9 +171,15 @@
           }
         }
       }
-      //   console.log("DATA FILTER");
-      //   console.log(dataFilter);
+
+
       this.dihitung = dataFilter.length;
+
+      this.googleDocs = 0;
+      this.instagram = 0;
+      this.facebook = 0;
+      this.blog = 0;
+      this.ugc = 0;
 
       for (let x of dataFilter) {
         this.jumlahKata += +x.jumlahKata;
@@ -169,14 +197,7 @@
         }
       }
 
-      // nama, jumlahSetoran, jumlahKata
       let semuaNama = [];
-      console.log(dataFilter);
-
-      //   let semuaBulan = [];
-      //   for (let item of dataFilter) {
-      //     semuaBulan.push();
-      //   }
 
       dataFilter.forEach((x) => (semuaNama = [...semuaNama, x.nama]));
       semuaNama = [...new Set(semuaNama)];
@@ -200,7 +221,11 @@
         ];
       }
       this.rekap = dataRekap;
-      //   console.log(dataRekap);
+
+      this.emas = 0;
+      this.perak = 0;
+      this.perunggu = 0;
+      this.tanpaMedali = 0;
 
       for (let x of dataRekap) {
         if (x.jumlahSetoran >= 25 && x.jumlahSetoran <= 31) {

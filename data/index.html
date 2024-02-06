@@ -1,0 +1,191 @@
+<style>
+    :root {
+        --merah: rgb(254, 202, 202);
+    }
+
+    .wadah-tabel {
+        max-width: 100%;
+        overflow: auto;
+    }
+
+    .app a {
+        float: left !important;
+    }
+</style>
+<script src="https://unpkg.com/petite-vue@0.4.0/dist/petite-vue.iife.js"></script>
+<main class="app" v-on:vue:mounted="buatFilter">
+    <select v-model="bulanTerpilih" v-on:change="dapatkan">
+        <option v-for="x in listBulan">{{ x }}</option>
+    </select>
+    <section class="wadah-tabel">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Nama</th>
+                    <th>Platform</th>
+                    <th>Link</th>
+                    <th>Jumlah Kata</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(x, n) in data" v-bind:class='x.style'>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata'>{{+n + 1}}</td>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata'>{{x.tanggal}}</td>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata'>{{x.nama}}</td>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata'>{{x.platform}}</td>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata' v-html="x.link"></td>
+                    <td v-bind:data-jumlah-kata='x.jumlah_kata'>{{x.jumlah_kata}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script>
+    PetiteVue.createApp({
+        listBulan: [],
+        bulanTerpilih: '',
+        data: [],
+        sumber: 'https://sheets.googleapis.com/v4/spreadsheets/18H4E2we8XWUB4d-SUSpkllunVKSyKlgeOM4-PZJaSyw/values/Form%20Responses%201?key=AIzaSyAbtHcMPVjDFVRxQyx1pVwl6BIuSEEdRZY',
+        // sumber: "../Form Responses 1.json",
+        async buatFilter() {
+            let datanya = await fetch(this.sumber);
+            datanya = await datanya.json();
+            let nilainya = datanya.values.filter(x => x.length > 0).filter((a, n) => n != 0);
+
+
+            let dataSemua = [];
+            for (let x of nilainya) {
+                let [tanggal, nama, media, jumlahKata, link] = x;
+                dataSemua.push({
+                    tanggal,
+                    nama,
+                    media,
+                    jumlahKata,
+                    link,
+                    bulan: tanggal.split(' ')[0].substring(3),
+                    tanggalnyaAja: tanggal.replace(/\s.+/, ""),
+                });
+            }
+
+
+
+            function getDistinctMonths(dataSet) {
+                const uniqueMonths = new Set();
+                dataSet.forEach(item => {
+                    uniqueMonths.add(item.bulan);
+                });
+                return Array.from(uniqueMonths);
+            }
+            this.listBulan = getDistinctMonths(dataSemua);
+            this.bulanTerpilih = this.listBulan[this.listBulan.length - 1];
+            this.dapatkan();
+        },
+        async dapatkan() {
+            let ambil = await fetch(this.sumber);
+            ambil = await ambil.json();
+
+            let nilainya = ambil.values.filter(x => x.length > 0).filter((a, n) => n != 0);
+            console.log(nilainya);
+
+            let array = [];
+            for (let x of nilainya) {
+                let [tanggal, nama, platform, jumlah_kata, link] = x;
+                tanggal = tanggal.replace(/\s(\d{1}:)/, ' 0$1');
+                link = `<a rel='nofollow' href='${link}'>${link}</a>`;
+                let style = nama.replace(/[^a-z0-9]/gi, '') + '-' + tanggal.replace(/\//g, '-').replace(/\s\d{2}:\d{2}:\d{2}/, '');
+
+                array = [...array, {
+                    tanggal,
+                    nama,
+                    platform,
+                    jumlah_kata,
+                    link,
+                    bulan: tanggal.split(' ')[0].substring(3),
+                    style
+                }];
+            }
+            array = array.sort((a, b) => a.nama > b.nama ? 1 : -1).filter(x => x.bulan == this.bulanTerpilih);
+            this.data = array;
+
+            await PetiteVue.nextTick();
+
+            document.querySelectorAll('.app td').forEach(y => {
+                y.style.background = `var(--merah)`;
+            });
+            for (let x of this.data) {
+                document.querySelector(`.app .${x.style}`).querySelectorAll('td').forEach(y => {
+                    if (y.dataset.jumlahKata >= 300) {
+                        y.style.background = 'white';
+                    }
+                });
+            }
+        }
+    }).mount('.app')
+</script>
+
+<!-- <script>
+        (() => {
+            z = x => document.querySelector(x);
+            zz = x => document.querySelectorAll(x);
+
+            let data = [];
+            let link = 'https://sheets.googleapis.com/v4/spreadsheets/18H4E2we8XWUB4d-SUSpkllunVKSyKlgeOM4-PZJaSyw/values/Form%20Responses%201?key=AIzaSyAbtHcMPVjDFVRxQyx1pVwl6BIuSEEdRZY';
+
+            function generate_tabel() {
+                let tabel = data.map((x, n) => `
+				<tr class='${x.style}'>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${+n + 1}</td>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${x.tanggal}</td>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${x.nama}</td>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${x.platform}</td>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${x.link}</td>
+					<td data-jumlah-kata='${x.jumlah_kata}'>${x.jumlah_kata}</td>
+				</tr>	
+			`).join('');
+                z('.isi').outerHTML = tabel;
+
+                zz('.app td').forEach(y => {
+                    y.style.background = `var(--merah)`;
+                });
+                for (let x of data) {
+                    z(`.app .${x.style}`).querySelectorAll('td').forEach(y => {
+                        if (y.dataset.jumlahKata >= 300) {
+                            y.style.background = 'white';
+                        }
+                    });
+                }
+            }
+
+            async function dapatkan() {
+                let ambil = await fetch(link);
+                ambil = await ambil.json();
+
+                let nilainya = ambil.values.filter(x => x.length > 0).filter((a, n) => n != 0);
+
+                let array = [];
+                for (let x of nilainya) {
+                    let [tanggal, nama, platform, jumlah_kata, link] = x;
+                    tanggal = tanggal.replace(/\s(\d{1}:)/, ' 0$1');
+                    link = `<a rel='nofollow' href='${link}'>${link}</a>`;
+                    let style = nama.replace(/[^a-z0-9]/gi, '') + '-' + tanggal.replace(/\//g, '-').replace(/\s\d{2}:\d{2}:\d{2}/, '');
+
+                    array = [...array, {
+                        tanggal,
+                        nama,
+                        platform,
+                        jumlah_kata,
+                        link,
+                        style
+                    }];
+                }
+                array = array.sort((a, b) => a.nama > b.nama ? 1 : -1);
+
+                data = array;
+                generate_tabel();
+            }
+            dapatkan();
+        })()
+</script> -->
